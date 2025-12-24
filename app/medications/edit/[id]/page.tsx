@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useParams } from 'next/navigation';
-import MedicationEditForm from '../../../components/MedicationEditForm';
+import MedicationEditForm from '@/components/MedicationEditForm';
 
 export default function EditMedicationPage() {
   const params = useParams();

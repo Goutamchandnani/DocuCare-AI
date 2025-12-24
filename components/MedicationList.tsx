@@ -16,10 +16,17 @@ interface Medication {
   created_at: string;
 }
 
-export default function MedicationList() {
+interface MedicationListProps {
+  refreshTrigger?: number;
+}
+
+export default function MedicationList({ refreshTrigger }: MedicationListProps) {
   const [medications, setMedications] = useState<Medication[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(10); // You can adjust this value
+  const [hasMore, setHasMore] = useState(true);
   const supabase = createClientComponentClient();
   const router = useRouter();
 
@@ -56,28 +63,53 @@ export default function MedicationList() {
         return;
       }
 
+      const from = page * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+
       const { data, error } = await supabase
         .from('medications')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
       if (error) {
         console.error('Error fetching medications:', error);
         setError('Failed to load medications.');
         setMedications([]);
       } else if (data) {
-        setMedications(data as Medication[]);
+        setMedications(prevMedications => [...prevMedications, ...data as Medication[]]);
+        setHasMore(data.length === itemsPerPage);
       } else {
         setMedications([]);
+        setHasMore(false);
       }
       setLoading(false);
     }
 
     fetchMedications();
-  }, [supabase]);
+  }, [supabase, refreshTrigger, page, itemsPerPage]);
 
-  if (loading) return <div className="p-4 text-center">Loading medications...</div>;
+  useEffect(() => {
+    if (refreshTrigger !== undefined) {
+      setMedications([]);
+      setPage(0);
+      setHasMore(true);
+    }
+  }, [refreshTrigger]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 100 && hasMore && !loading) {
+        setPage(prevPage => prevPage + 1);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasMore, loading]);
+
+  if (loading && medications.length === 0) return <div className="p-4 text-center">Loading medications...</div>;
   if (error) return <div className="p-4 text-center text-red-500">Error: {error}</div>;
 
   return (

@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { name, dosage, frequency, start_date, end_date, notes, reminder_time, reminder_frequency } = await request.json()
+  const { name, dosage, frequency, start_date, end_date, notes, reminder_time, reminder_frequency, reminder_days } = await request.json()
 
   const { data: newMedication, error } = await supabase
     .from('medications')
@@ -45,6 +45,7 @@ export async function POST(request: Request) {
       notes,
       reminder_time,
       reminder_frequency,
+      reminder_days,
     })
     .select()
     .single()

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import DocumentSearchFilter from '../../components/DocumentSearchFilter';
 import DocumentList from '../../components/DocumentList';
+import { UploadZone } from '../../components/UploadZone';
 
 interface Document {
   id: string;
@@ -31,33 +32,31 @@ export default function DocumentsPage() {
       return;
     }
 
-    let query = supabase
-      .from('documents')
-      .select('id, filename, document_type, created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (filterType !== 'all') {
-      query = query.eq('document_type', filterType);
-    }
-
+    const queryParams = new URLSearchParams();
     if (searchTerm) {
-      query = query.ilike('filename', `%{searchTerm}%`);
+      queryParams.append('searchTerm', searchTerm);
+    }
+    if (filterType && filterType !== 'all') {
+      queryParams.append('filterType', filterType);
     }
 
-    const { data, error } = await query;
+    const url = `/api/documents?${queryParams.toString()}`;
 
-    if (error) {
-      console.error('Error fetching documents:', error);
-      setError('Failed to load documents.');
-      setDocuments([]);
-    } else if (data) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
       setDocuments(data as Document[]);
-    } else {
+    } catch (err: any) {
+      console.error('Error fetching documents:', err);
+      setError(`Failed to load documents: ${err.message}`);
       setDocuments([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, [supabase, filterType, searchTerm]);
+  }, [searchTerm, filterType, supabase]);
 
   useEffect(() => {
     fetchDocuments();
@@ -76,11 +75,13 @@ export default function DocumentsPage() {
       return;
     }
     try {
-      // This will require a new API route for deletion
-      // For now, we'll simulate deletion or handle it directly if possible
-      const { error } = await supabase.from('documents').delete().eq('id', documentId);
-      if (error) {
-        throw new Error(error.message);
+      const response = await fetch(`/api/documents/${documentId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete document');
       }
       fetchDocuments(); // Re-fetch documents after deletion
     } catch (err: any) {
@@ -95,6 +96,9 @@ export default function DocumentsPage() {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Your Documents</h1>
+      <div className="mb-6">
+        <UploadZone onUploadSuccess={fetchDocuments} />
+      </div>
       <DocumentSearchFilter onSearch={handleSearch} onFilter={handleFilter} />
       <DocumentList documents={documents} onDelete={handleDelete} />
     </div>

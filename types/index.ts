@@ -9,6 +9,7 @@ export interface Document {
   metadata: any;
   created_at: string;
   last_reminder_sent?: string;
+  reminder_days?: string;
 }
 
 export interface Medication {
@@ -27,6 +28,7 @@ export interface Medication {
   is_active?: boolean;
   reminder_frequency?: string;
   last_reminder_sent?: string;
+  reminder_days?: string;
 }
 
 export interface ChatMessage {

@@ -3,19 +3,32 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export async function GET(req: Request) {
-  const supabase = createRouteHandlerClient({ cookies })
-  const { data: { user } } = await supabase.auth.getUser()
+  const supabase = createRouteHandlerClient({ cookies });
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: documents, error } = await supabase
+  const { searchParams } = new URL(req.url);
+  const searchTerm = searchParams.get('searchTerm');
+  const filterType = searchParams.get('filterType');
+
+  let query = supabase
     .from('documents')
     .select('*')
     .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+    .order('created_at', { ascending: false });
 
+  if (filterType && filterType !== 'all') {
+    query = query.eq('document_type', filterType);
+  }
+
+  if (searchTerm) {
+    query = query.or(`filename.ilike.%${searchTerm}%,extracted_text.ilike.%${searchTerm}%,ai_summary.ilike.%${searchTerm}%`);
+  }
+
+  const { data: documents, error } = await query;
   if (error) {
     console.error('Error fetching documents:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })

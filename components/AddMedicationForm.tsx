@@ -4,7 +4,11 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
-export function AddMedicationForm() {
+interface AddMedicationFormProps {
+  onMedicationAdded?: () => void;
+}
+
+export function AddMedicationForm({ onMedicationAdded }: AddMedicationFormProps) {
   const [name, setName] = useState('')
   const [dosage, setDosage] = useState('')
   const [frequency, setFrequency] = useState('')
@@ -12,12 +16,34 @@ export function AddMedicationForm() {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [isActive, setIsActive] = useState(true)
-  const [reminderTime, setReminderTime] = useState('')
+  const [reminderTimes, setReminderTimes] = useState<string[]>(['']);
   const [reminderFrequency, setReminderFrequency] = useState<'daily' | 'twice_daily' | 'weekly'>('daily')
+  const [reminderDays, setReminderDays] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const router = useRouter()
   const supabase = createClientComponentClient()
+
+  const handleAddReminderTime = () => {
+    setReminderTimes([...reminderTimes, '']);
+  };
+
+  const handleRemoveReminderTime = (index: number) => {
+    setReminderTimes(reminderTimes.filter((_, i) => i !== index));
+  };
+
+  const handleReminderTimeChange = (index: number, value: string) => {
+    const newReminderTimes = [...reminderTimes];
+    newReminderTimes[index] = value;
+    setReminderTimes(newReminderTimes);
+  };
+
+  const handleReminderDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value, checked } = e.target;
+    setReminderDays(prev =>
+      checked ? [...prev, value] : prev.filter(day => day !== value)
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,8 +69,9 @@ export function AddMedicationForm() {
         start_date: startDate,
         end_date: endDate || null,
         is_active: isActive,
-        reminder_time: reminderTime || null,
+        reminder_time: reminderTimes.filter(time => time !== '').join(',') || null,
         reminder_frequency: reminderFrequency || null,
+        reminder_days: reminderFrequency === 'weekly' ? reminderDays.join(',') : null,
       })
 
     if (error) {
@@ -58,6 +85,9 @@ export function AddMedicationForm() {
       setStartDate('')
       setEndDate('')
       setIsActive(true)
+      if (onMedicationAdded) {
+        onMedicationAdded();
+      }
       router.refresh()
     }
     setLoading(false)
@@ -142,14 +172,33 @@ export function AddMedicationForm() {
         <label htmlFor="isActive" className="text-gray-700 text-sm font-bold">Currently Active</label>
       </div>
       <div className="mb-4">
-        <label htmlFor="reminderTime" className="block text-gray-700 text-sm font-bold mb-2">Reminder Time:</label>
-        <input
-          type="time"
-          id="reminderTime"
-          value={reminderTime}
-          onChange={(e) => setReminderTime(e.target.value)}
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-        />
+        <label className="block text-gray-700 text-sm font-bold mb-2">Reminder Times:</label>
+        {reminderTimes.map((time, index) => (
+          <div key={index} className="flex items-center mb-2">
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => handleReminderTimeChange(index, e.target.value)}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            />
+            {reminderTimes.length > 1 && (
+              <button
+                type="button"
+                onClick={() => handleRemoveReminderTime(index)}
+                className="ml-2 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-700"
+              >
+                -
+              </button>
+            )}
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={handleAddReminderTime}
+          className="mt-2 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-700"
+        >
+          + Add Time
+        </button>
       </div>
       <div className="mb-4">
         <label htmlFor="reminderFrequency" className="block text-gray-700 text-sm font-bold mb-2">Reminder Frequency:</label>
@@ -164,6 +213,26 @@ export function AddMedicationForm() {
           <option value="weekly">Weekly</option>
         </select>
       </div>
+
+      {reminderFrequency === 'weekly' && (
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2">Days of the Week:</label>
+          <div className="flex flex-wrap gap-2">
+            {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
+              <label key={day} className="inline-flex items-center">
+                <input
+                  type="checkbox"
+                  value={day}
+                  checked={reminderDays.includes(day)}
+                  onChange={handleReminderDayChange}
+                  className="form-checkbox"
+                />
+                <span className="ml-2 text-gray-700">{day}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
       <button
         type="submit"
         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
