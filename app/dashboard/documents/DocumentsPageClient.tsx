@@ -14,12 +14,16 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import Link from 'next/link'
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
 
 interface DocumentsPageClientProps {
   documents: Document[]
   initialQuery?: string
   initialType?: string
   uploadDocument: (formData: FormData) => Promise<void>
+  currentPage: number
+  itemsPerPage: number
+  totalCount: number
 }
 
 export default function DocumentsPageClient({
@@ -27,6 +31,9 @@ export default function DocumentsPageClient({
   initialQuery,
   initialType,
   uploadDocument,
+  currentPage,
+  itemsPerPage,
+  totalCount,
 }: DocumentsPageClientProps) {
   const [query, setQuery] = useState(initialQuery || '')
   const [type, setType] = useState(initialType || '')
@@ -95,6 +102,24 @@ export default function DocumentsPageClient({
           ))}
         </TableBody>
       </Table>
+
+      <Pagination className="mt-4">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious href={`/dashboard/documents?page=${Math.max(1, currentPage - 1)}&pageSize=${itemsPerPage}${initialQuery ? `&query=${initialQuery}` : ''}${initialType ? `&type=${initialType}` : ''}`} />
+          </PaginationItem>
+          {[...Array(Math.ceil(totalCount / itemsPerPage))].map((_, i) => (
+            <PaginationItem key={i}>
+              <PaginationLink isActive={currentPage === i + 1} href={`/dashboard/documents?page=${i + 1}&pageSize=${itemsPerPage}${initialQuery ? `&query=${initialQuery}` : ''}${initialType ? `&type=${initialType}` : ''}`}>
+                {i + 1}
+              </PaginationLink>
+            </PaginationItem>
+          ))}
+          <PaginationItem>
+            <PaginationNext href={`/dashboard/documents?page=${Math.min(Math.ceil(totalCount / itemsPerPage), currentPage + 1)}&pageSize=${itemsPerPage}${initialQuery ? `&query=${initialQuery}` : ''}${initialType ? `&type=${initialType}` : ''}`} />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
     </div>
   )
 }

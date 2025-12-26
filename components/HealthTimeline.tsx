@@ -46,6 +46,7 @@ export function HealthTimeline({ refreshTrigger, searchQuery }: HealthTimelinePr
       toast({
         title: "Event Deleted",
         description: "The health event has been successfully deleted.",
+        variant: 'default'
       });
       setHealthEvents(prevEvents => prevEvents.filter(event => event.id !== id));
     } catch (err: any) {
@@ -80,6 +81,11 @@ export function HealthTimeline({ refreshTrigger, searchQuery }: HealthTimelinePr
       } catch (err: any) {
         console.error('Error fetching health events:', err);
         setError(`Failed to load health events: ${err.message}`);
+        toast({
+          title: "Error fetching health events",
+          description: err.message,
+          variant: "destructive",
+        });
         setHealthEvents([]);
       } finally {
         setLoading(false);
@@ -87,7 +93,7 @@ export function HealthTimeline({ refreshTrigger, searchQuery }: HealthTimelinePr
     }
 
     fetchHealthEvents();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, toast]);
 
   if (loading) return <div className="p-4 text-center">Loading health timeline...</div>;
   if (error) return <div className="p-4 text-center text-red-500">Error: {error}</div>;

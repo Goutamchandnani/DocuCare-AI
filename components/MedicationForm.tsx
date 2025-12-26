@@ -21,8 +21,8 @@ interface Medication {
   end_date: string | null;
   is_active: boolean;
   document_id: string | null;
-  reminder_time?: string;
-  reminder_frequency?: 'daily' | 'twice_daily' | 'weekly';
+  reminder_time?: string | null;
+  reminder_frequency?: 'daily' | 'twice_daily' | 'weekly' | null;
 }
 
 const MedicationForm: React.FC<MedicationFormProps> = ({ onSave, onCancel, initialData }) => {

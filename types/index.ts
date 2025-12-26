@@ -23,10 +23,10 @@ export interface Medication {
   notes: string | null;
   created_at: string;
   updated_at: string;
-  reminder_time?: string;
+  reminder_time?: string | null;
   instructions?: string;
   is_active?: boolean;
-  reminder_frequency?: string;
+  reminder_frequency?: 'daily' | 'twice_daily' | 'weekly' | null;
   last_reminder_sent?: string;
   reminder_days?: string;
 }

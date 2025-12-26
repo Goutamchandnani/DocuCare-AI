@@ -18,8 +18,10 @@ interface Medication {
   end_date: string | null;
   is_active: boolean;
   document_id: string | null;
-  reminder_time?: string;
-  reminder_frequency?: 'daily' | 'twice_daily' | 'weekly';
+  reminder_time?: string | null;
+  reminder_frequency?: 'daily' | 'twice_daily' | 'weekly' | null;
+  reminders?: { time: string; dose: string }[];
+  reminder_days?: string[];
 }
 
 interface MedicationEditFormProps {
@@ -40,8 +42,9 @@ const MedicationEditForm: React.FC<MedicationEditFormProps> = ({ medicationId })
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isActive, setIsActive] = useState(false);
-  const [reminderTime, setReminderTime] = useState('');
+  const [reminderTimes, setReminderTimes] = useState<string[]>(['']);
   const [reminderFrequency, setReminderFrequency] = useState<Medication['reminder_frequency']>('daily');
+  const [reminderDays, setReminderDays] = useState<string[]>([]);
 
   useEffect(() => {
     async function fetchMedication() {
@@ -73,8 +76,9 @@ const MedicationEditForm: React.FC<MedicationEditFormProps> = ({ medicationId })
         setStartDate(data.start_date);
         setEndDate(data.end_date || '');
         setIsActive(data.is_active);
-        setReminderTime(data.reminder_time || '');
+        setReminderTimes(data.reminders?.map((r: { time: string; dose: string }) => r.time) || (data.reminder_time ? data.reminder_time.split(',') : ['']));
         setReminderFrequency(data.reminder_frequency || 'daily');
+        setReminderDays(data.reminder_days ? data.reminder_days.split(',') : []);
       }
       setLoading(false);
     }
@@ -105,8 +109,9 @@ const MedicationEditForm: React.FC<MedicationEditFormProps> = ({ medicationId })
       start_date: startDate,
       end_date: endDate || null,
       is_active: isActive,
-      reminder_time: reminderTime || null,
+      reminder_time: reminderTimes.filter(time => time !== '').join(',') || null,
       reminder_frequency: reminderFrequency || null,
+      reminder_days: reminderFrequency === 'weekly' ? reminderDays.join(',') : null,
     };
 
     const { error } = await supabase
@@ -155,10 +160,6 @@ const MedicationEditForm: React.FC<MedicationEditFormProps> = ({ medicationId })
         <Input id="endDate" type="date" value={endDate || ''} onChange={(e) => setEndDate(e.target.value)} />
       </div>
       <div>
-        <Label htmlFor="reminderTime">Reminder Time</Label>
-        <Input id="reminderTime" type="time" value={reminderTime} onChange={(e) => setReminderTime(e.target.value)} />
-      </div>
-      <div>
         <Label htmlFor="reminderFrequency">Reminder Frequency</Label>
         <select
           id="reminderFrequency"
@@ -170,6 +171,55 @@ const MedicationEditForm: React.FC<MedicationEditFormProps> = ({ medicationId })
           <option value="twice_daily">Twice Daily</option>
           <option value="weekly">Weekly</option>
         </select>
+      </div>
+      {reminderFrequency === 'weekly' && (
+        <div>
+          <Label>Reminder Days</Label>
+          <div className="flex flex-wrap gap-2">
+            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+              <div key={day} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={day}
+                  value={day}
+                  checked={reminderDays.includes(day)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setReminderDays([...reminderDays, day]);
+                    } else {
+                      setReminderDays(reminderDays.filter(d => d !== day));
+                    }
+                  }}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <Label htmlFor={day} className="ml-2">{day}</Label>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      <div>
+        <Label>Reminder Times</Label>
+        {reminderTimes.map((time, index) => (
+          <div key={index} className="flex gap-2 mb-2">
+            <Input
+              type="time"
+              value={time}
+              onChange={(e) => {
+                const newReminderTimes = [...reminderTimes];
+                newReminderTimes[index] = e.target.value;
+                setReminderTimes(newReminderTimes);
+              }}
+            />
+            {reminderTimes.length > 1 && (
+              <Button type="button" variant="outline" onClick={() => {
+                const newReminderTimes = reminderTimes.filter((_, i) => i !== index);
+                setReminderTimes(newReminderTimes);
+              }}>Remove</Button>
+            )}
+          </div>
+        ))}
+        <Button type="button" variant="outline" onClick={() => setReminderTimes([...reminderTimes, ''])}>Add Reminder Time</Button>
       </div>
       <div className="flex items-center space-x-2">
         <input

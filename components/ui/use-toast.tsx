@@ -54,7 +54,7 @@ const reducer = (state: State, action: Action): State => {
       // the dismiss function to the outside world. We use a queue to defer
       // executing this side effect until after the reducer has finished.
       // We'll call this in an effect after the reducer runs.
-      addToastQueueRef.current.add(toastId)
+      addToastQueue.add(toastId)
 
       return {
         ...state,
@@ -100,11 +100,7 @@ const createToast = ({ ...props }: ToastProps) => {
   }
 }
 
-const addToastQueueRef = React.createRef<Set<string | undefined>>()
-
-if (!addToastQueueRef.current) {
-  addToastQueueRef.current = new Set()
-}
+let addToastQueue: Set<string | undefined> = new Set()
 
 let state: State = { toasts: [] }
 
@@ -118,9 +114,10 @@ function useToast() {
   const [toasts, setToasts] = React.useState(state.toasts);
 
   React.useEffect(() => {
-    listeners.push(setToasts);
+    const listener = (state: State) => setToasts(state.toasts);
+    listeners.push(listener);
     return () => {
-      const index = listeners.indexOf(setToasts);
+      const index = listeners.indexOf(listener);
       if (index > -1) {
         listeners.splice(index, 1);
       }

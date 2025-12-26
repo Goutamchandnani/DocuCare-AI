@@ -3,7 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Document } from '@/types'
+import { Document as DocumentType } from '@/types'
+
+interface Document extends DocumentType {
+  structured_data?: any; // Allow for structured data
+}
 
 export function AddMedicationFromDocumentButton({ document }: { document: Document }) {
   const [isLoading, setIsLoading] = useState(false)
@@ -20,18 +24,29 @@ export function AddMedicationFromDocumentButton({ document }: { document: Docume
         return
       }
 
-      // Placeholder for medication extraction logic
-      // In a real scenario, you would parse document.extracted_text or document.ai_summary
-      // to get medication name, dosage, frequency, etc.
-      const medicationName = document.filename.replace(/\.(pdf|png|jpg|jpeg)$/i, '') || 'Unknown Medication'
+      let medicationName = 'Unknown Medication'
+      let dosage = 'N/A'
+      let frequency = 'N/A'
+      let instructions = 'Refer to document'
+
+      if (document.structured_data && document.structured_data.Medications && document.structured_data.Medications.length > 0) {
+        const firstMedication = document.structured_data.Medications[0]
+        medicationName = firstMedication.name || medicationName
+        dosage = firstMedication.dosage || dosage
+        frequency = firstMedication.frequency || frequency
+        instructions = firstMedication.instructions || instructions
+      } else {
+        // Fallback to filename if no structured medication data
+        medicationName = document.filename.replace(/\.(pdf|png|jpg|jpeg)$/i, '') || 'Unknown Medication'
+      }
 
       const { error } = await supabase.from('medications').insert({
         user_id: user.id,
         document_id: document.id,
         name: medicationName,
-        dosage: 'N/A', // Placeholder
-        frequency: 'N/A', // Placeholder
-        instructions: 'Refer to document', // Placeholder
+        dosage: dosage,
+        frequency: frequency,
+        instructions: instructions,
         start_date: new Date().toISOString().split('T')[0],
         is_active: true,
       })

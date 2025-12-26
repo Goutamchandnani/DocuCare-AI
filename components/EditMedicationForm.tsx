@@ -7,9 +7,9 @@ import { Medication } from '@/types'
 
 export function EditMedicationForm({ medication }: { medication: Medication }) {
   const [name, setName] = useState(medication.name)
-  const [dosage, setDosage] = useState(medication.dosage)
-  const [frequency, setFrequency] = useState(medication.frequency)
-  const [instructions, setInstructions] = useState(medication.instructions)
+  const [dosage, setDosage] = useState(medication.dosage || '')
+  const [frequency, setFrequency] = useState(medication.frequency || '')
+  const [instructions, setInstructions] = useState(medication.instructions || '')
   const [startDate, setStartDate] = useState(medication.start_date)
   const [endDate, setEndDate] = useState(medication.end_date || '')
   const [isActive, setIsActive] = useState(medication.is_active)
@@ -133,7 +133,7 @@ export function EditMedicationForm({ medication }: { medication: Medication }) {
         <input
           type="date"
           id="startDate"
-          value={startDate}
+          value={startDate || ''}
           onChange={(e) => setStartDate(e.target.value)}
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           required
@@ -144,7 +144,7 @@ export function EditMedicationForm({ medication }: { medication: Medication }) {
         <input
           type="date"
           id="endDate"
-          value={endDate}
+          value={endDate || ''}
           onChange={(e) => setEndDate(e.target.value)}
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
         />

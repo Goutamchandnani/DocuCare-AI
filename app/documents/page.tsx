@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import DocumentSearchFilter from '../../components/DocumentSearchFilter';
-import DocumentList from '../../components/DocumentList';
+import { Skeleton } from "@/components/ui/skeleton";
+import DocumentGrid from '../../components/DocumentGrid';
 import { UploadZone } from '../../components/UploadZone';
 
 interface Document {
@@ -11,6 +12,7 @@ interface Document {
   filename: string;
   document_type: string;
   created_at: string;
+  aiSummary?: string;
 }
 
 export default function DocumentsPage() {
@@ -90,7 +92,21 @@ export default function DocumentsPage() {
     }
   };
 
-  if (loading) return <div className="container mx-auto p-4 text-center">Loading documents...</div>;
+  if (loading) return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6">
+        <Skeleton className="h-9 w-1/3" />
+      </h1>
+      <div className="mb-6">
+        <Skeleton className="h-32 w-full" />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {[...Array(8)].map((_, i) => (
+          <Skeleton key={i} className="h-48 w-full" />
+        ))}
+      </div>
+    </div>
+  );
   if (error) return <div className="container mx-auto p-4 text-center text-red-500">Error: {error}</div>;
 
   return (
@@ -100,7 +116,31 @@ export default function DocumentsPage() {
         <UploadZone onUploadSuccess={fetchDocuments} />
       </div>
       <DocumentSearchFilter onSearch={handleSearch} onFilter={handleFilter} />
-      <DocumentList documents={documents} onDelete={handleDelete} />
+      <DocumentGrid documents={documents} onDelete={handleDelete} />
+      {documents.length === 0 && !loading && !error && (
+        <div className="text-center py-10">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="mx-auto h-12 w-12 text-gray-400"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 21h7.5V6.75a3.75 3.75 0 00-3.75-3.75H9.75M10.5 21v-7.5M6 7.5h3v3H6V7.5z"
+            />
+          </svg>
+          <h3 className="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+            No documents found
+          </h3>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Get started by uploading a new document.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

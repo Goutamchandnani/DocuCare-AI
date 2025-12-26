@@ -14,6 +14,8 @@ interface Medication {
   end_date: string | null;
   reminders: any[]; // Assuming reminders can be an array of objects
   created_at: string;
+  reminder_time?: string | null;
+  reminder_frequency?: 'daily' | 'twice_daily' | 'weekly' | null;
 }
 
 interface MedicationListProps {

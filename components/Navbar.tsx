@@ -33,63 +33,26 @@ export function Navbar() {
         <span className="sr-only">DocuCare AI</span>
       </Link>
       <div className="flex items-center gap-4">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button className="lg:hidden" size="icon" variant="outline">
-              <MenuIcon className="h-6 w-6" />
-              <span className="sr-only">Toggle navigation menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left">
-            <Link className="mb-4 flex items-center gap-2" href="#">
-              <MedicalCrossIcon className="h-6 w-6" />
-              <span className="font-semibold">DocuCare AI</span>
-            </Link>
-            <div className="flex flex-col gap-2">
-              <Link
-                className="flex w-full items-center py-2 text-lg font-semibold"
-                href="#"
-              >
-                Dashboard
-              </Link>
-              <Link
-                className="flex w-full items-center py-2 text-lg font-semibold"
-                href="#"
-              >
-                Documents
-              </Link>
-              <Link
-                className="flex w-full items-center py-2 text-lg font-semibold"
-                href="#"
-              >
-                Medications
-              </Link>
-              <Link
-                className="flex w-full items-center py-2 text-lg font-semibold"
-                href="#"
-              >
-                Chat
-              </Link>
-            </div>
-          </SheetContent>
-        </Sheet>
         <Link className="lg:hidden" href="#">
           <MedicalCrossIcon className="h-6 w-6" />
           <span className="sr-only">DocuCare AI</span>
         </Link>
       </div>
       <nav className="hidden lg:flex lg:items-center lg:gap-4">
-        <Link className="font-semibold" href="#">
+        <Link className="font-semibold" href="/dashboard">
           Dashboard
         </Link>
-        <Link className="font-semibold" href="#">
+        <Link className="font-semibold" href="/documents">
           Documents
         </Link>
-        <Link className="font-semibold" href="#">
+        <Link className="font-semibold" href="/medications">
           Medications
         </Link>
-        <Link className="font-semibold" href="#">
+        <Link className="font-semibold" href="/chat">
           Chat
+        </Link>
+        <Link className="font-semibold" href="/timeline">
+          Timeline
         </Link>
       </nav>
       <div className="flex items-center gap-4">
