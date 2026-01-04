@@ -20,7 +20,7 @@ interface DocumentsPageClientProps {
   documents: Document[]
   initialQuery?: string
   initialType?: string
-  uploadDocument: (formData: FormData) => Promise<void>
+  uploadDocument: (formData: FormData) => Promise<{ success: boolean; message: string }>
   currentPage: number
   itemsPerPage: number
   totalCount: number
@@ -73,7 +73,7 @@ export default function DocumentsPageClient({
         <UploadZone onUploadSuccess={() => {
           // Refresh the page or update the document list after successful upload
           window.location.reload()
-        }} />
+        }} uploadDocument={uploadDocument} />
       </div>
 
       <Table>

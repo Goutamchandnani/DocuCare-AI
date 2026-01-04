@@ -2,6 +2,9 @@ import { createServerClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import HealthTimelineClient from '@/components/HealthTimelineClient'
+import LandingHeader from '@/components/LandingHeader'
+import HeroSection from '@/components/HeroSection'
+import HowItWorks from '@/components/HowItWorks'
 
 export default async function Index() {
   const supabase = createServerClient(cookies())
@@ -9,7 +12,13 @@ export default async function Index() {
   const { data, error } = await supabase.auth.getUser()
 
   if (error || !data?.user) {
-    redirect('/login')
+    return (
+      <>
+        <LandingHeader />
+        <HeroSection />
+        <HowItWorks />
+      </>
+    )
   }
 
   return (

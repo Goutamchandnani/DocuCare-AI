@@ -92,6 +92,27 @@ export default function DocumentsPage() {
     }
   };
 
+  const uploadDocument = useCallback(async (formData: FormData): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response = await fetch('/api/ocr', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, message: errorData.error || 'An unknown error occurred during upload.' };
+      }
+
+      // Assuming successful upload, re-fetch documents
+      fetchDocuments();
+      return { success: true, message: 'Document uploaded successfully!' };
+    } catch (error: any) {
+      console.error('Error uploading document:', error);
+      return { success: false, message: `Network error or server unreachable: ${error.message}` };
+    }
+  }, [fetchDocuments]);
+
   if (loading) return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">
@@ -113,7 +134,7 @@ export default function DocumentsPage() {
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Your Documents</h1>
       <div className="mb-6">
-        <UploadZone onUploadSuccess={fetchDocuments} />
+        <UploadZone onUploadSuccess={fetchDocuments} uploadDocument={uploadDocument} />
       </div>
       <DocumentSearchFilter onSearch={handleSearch} onFilter={handleFilter} />
       <DocumentGrid documents={documents} onDelete={handleDelete} />

@@ -1,3 +1,4 @@
+import './globals.css';
 import { Navbar } from '../components/Navbar';
 import { BottomNavbar } from '../components/BottomNavbar';
 

@@ -1,6 +1,7 @@
 import { createServerClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 import { Document } from '@/types'
 import DocumentsPageClient from './DocumentsPageClient'
 
@@ -56,27 +57,33 @@ export default async function DocumentsPage({
     return <p>Error loading documents.</p>
   }
 
-  const uploadDocument = async (formData: FormData) => {
+  const uploadDocument = async (formData: FormData): Promise<{ success: boolean; message: string }> => {
     'use server'
     const file = formData.get('file') as File
     const documentType = formData.get('document_type') as string
 
     if (!file) {
-      console.error('No file selected')
-      return
+      return { success: false, message: 'No file selected.' }
     }
 
-    const uploadResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/ocr`, {
-      method: 'POST',
-      body: formData,
-    })
+    try {
+      const uploadResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/ocr`, {
+        method: 'POST',
+        body: formData,
+      })
 
-    if (!uploadResponse.ok) {
-      const errorData = await uploadResponse.json()
-      console.error('Error uploading document:', errorData.error)
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json()
+        console.error('Error uploading document:', errorData.error)
+        return { success: false, message: errorData.error || 'An unknown error occurred during upload.' }
+      }
+
+      revalidatePath('/dashboard/documents')
+      return { success: true, message: 'Document uploaded successfully!' }
+    } catch (networkError: any) {
+      console.error('Network error during document upload:', networkError)
+      return { success: false, message: `Network error or server unreachable: ${networkError.message}` }
     }
-
-    redirect('/dashboard/documents')
   }
 
   return (

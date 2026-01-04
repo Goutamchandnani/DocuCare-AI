@@ -4,6 +4,15 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
+interface ExtractedData {
+  summary?: string;
+  documentType?: string;
+  medications?: { name: string; dosage: string; frequency: string }[];
+  labResults?: { testName: string; result: string; units: string; referenceRange: string }[];
+  doctorName?: string;
+  date?: string;
+}
+
 interface Document {
   id: string;
   user_id: string;
@@ -13,7 +22,7 @@ interface Document {
   upload_date: string;
   ai_summary: string | null;
   extracted_text: string | null;
-  key_information: any | null; // JSON type
+  extracted_data: ExtractedData | null; // JSON type
 }
 
 export default function DocumentDetailPage() {
@@ -85,10 +94,72 @@ export default function DocumentDetailPage() {
             <CardTitle>Extracted Key Information</CardTitle>
           </CardHeader>
           <CardContent>
-            {document.key_information ? (
-              <pre className="whitespace-pre-wrap bg-gray-100 p-4 rounded-md">
-                {JSON.stringify(document.key_information, null, 2)}
-              </pre>
+            {document.extracted_data ? (
+              <div className="space-y-4">
+                {document.extracted_data.summary && (
+                  <div>
+                    <h3 className="text-lg font-semibold">Summary:</h3>
+                    <p>{document.extracted_data.summary}</p>
+                  </div>
+                )}
+                {document.extracted_data.documentType && (
+                  <div>
+                    <h3 className="text-lg font-semibold">Document Type:</h3>
+                    <p>{document.extracted_data.documentType}</p>
+                  </div>
+                )}
+                {document.extracted_data.doctorName && (
+                  <div>
+                    <h3 className="text-lg font-semibold">Doctor Name:</h3>
+                    <p>{document.extracted_data.doctorName}</p>
+                  </div>
+                )}
+                {document.extracted_data.date && (
+                  <div>
+                    <h3 className="text-lg font-semibold">Date:</h3>
+                    <p>{document.extracted_data.date}</p>
+                  </div>
+                )}
+                {document.extracted_data.medications && document.extracted_data.medications.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold">Medications:</h3>
+                    <ul className="list-disc pl-5">
+                      {document.extracted_data.medications.map((med, index) => (
+                        <li key={index}>
+                          {med.name} - {med.dosage} ({med.frequency})
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {document.extracted_data.labResults && document.extracted_data.labResults.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold">Lab Results:</h3>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Test Name</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Units</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference Range</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {document.extracted_data.labResults.map((lab, index) => (
+                            <tr key={index}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{lab.testName}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{lab.result}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{lab.units}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{lab.referenceRange}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <p>No key information extracted.</p>
             )}
